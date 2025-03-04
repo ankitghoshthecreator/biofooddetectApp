@@ -16,14 +16,15 @@ import androidx.appcompat.app.AppCompatActivity
 class MainActivity : AppCompatActivity() {
     private lateinit var btnOpenCamera: Button
     private lateinit var imageView: ImageView
-    private var capturedImageUri: Uri? = null
+    private var yoloClassifier: YoloClassifier? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         btnOpenCamera = findViewById(R.id.btnOpenCamera)
-        imageView = findViewById(R.id.imageView) // Make sure you have an ImageView in your XML
+        imageView = findViewById(R.id.imageView)
+        yoloClassifier = YoloClassifier(this)
 
         btnOpenCamera.setOnClickListener {
             openCamera()
@@ -34,8 +35,7 @@ class MainActivity : AppCompatActivity() {
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
             val imageBitmap = result.data!!.extras?.get("data") as Bitmap
             imageView.setImageBitmap(imageBitmap)
-
-            showUploadDialog()
+            showUploadDialog(imageBitmap)
         } else {
             Toast.makeText(this, "Image capture failed!", Toast.LENGTH_SHORT).show()
         }
@@ -46,18 +46,26 @@ class MainActivity : AppCompatActivity() {
         cameraLauncher.launch(cameraIntent)
     }
 
-    private fun showUploadDialog() {
+    private fun showUploadDialog(imageBitmap: Bitmap) {
         AlertDialog.Builder(this)
             .setTitle("Upload Image")
             .setMessage("Do you want to upload this image?")
             .setPositiveButton("Yes") { _, _ ->
-                // TODO: Implement what to do if the user selects 'Yes'
-                Toast.makeText(this, "Uploading Image...", Toast.LENGTH_SHORT).show()
+                classifyImage(imageBitmap)
             }
             .setNegativeButton("No") { _, _ ->
-                openCamera() // Reopen camera if user selects 'No'
+                openCamera()
             }
             .setCancelable(false)
             .show()
+    }
+
+    private fun classifyImage(imageBitmap: Bitmap) {
+        val detectedObjects = yoloClassifier?.detectObjects(imageBitmap) ?: emptyList()
+        if (detectedObjects.isNotEmpty()) {
+            Toast.makeText(this, "Detected: ${detectedObjects.joinToString(", ")}", Toast.LENGTH_LONG).show()
+        } else {
+            Toast.makeText(this, "No objects detected!", Toast.LENGTH_SHORT).show()
+        }
     }
 }
