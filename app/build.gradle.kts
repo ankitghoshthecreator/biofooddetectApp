@@ -47,7 +47,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
 
-     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.13.1")
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.16.3")
 
 
 
